@@ -1,0 +1,123 @@
+---
+title: "𝙿𝙰𝟷_𝚝𝚎𝚖𝚙𝚕𝚊𝚝𝚎"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r, echo=FALSE}
+
+library(ggplot2)
+library(scales)
+library(mice)
+
+
+
+
+
+activity <- read.csv("activity.csv")
+```
+
+
+## What is mean total number of steps taken per day?
+
+## 1. Calculate the total number of steps taken per day
+
+stepsperday <- tapply(activity$steps, activity$date, sum, na.rm=TRUE)
+
+```{r, echo=FALSE}
+stepsperday <- tapply(activity$steps, activity$date, sum, na.rm=TRUE)
+```
+## 2. Histogram
+qplot(stepsperday, xlab='Total steps per day', ylab='Frequency')
+
+```{r, echo=FALSE}
+qplot(stepsperday, xlab='Total steps per day', ylab='Frequency',binwidth=100)
+```
+
+## 3. Mean and median
+
+stepbymean <- mean(stepsperday)
+stepbymedian <- median(stepsperday)
+
+```{r, echo=FALSE}
+stepbymean <- mean(stepsperday)
+stepbymedian <- median(stepsperday)
+```
+
+## 4. Time series plot 
+
+averagesteps <- aggregate(x=list(meansteps=activity$steps), by=list(interval=activity$interval), FUN=mean, na.rm=TRUE)
+
+ggplot(data=averagesteps, aes(x=interval, y=meansteps)) +
+    geom_line() +
+    xlab("5-minute interval") +
+    ylab("average number of steps taken") 
+    
+```{r, echo=FALSE}
+averagesteps <- aggregate(x=list(meansteps=activity$steps), by=list(interval=activity$interval), FUN=mean, na.rm=TRUE)
+
+ggplot(data=averagesteps, aes(x=interval, y=meansteps)) +
+    geom_line() +
+    xlab("5-minute interval") +
+    ylab("average number of steps taken") 
+```
+
+## 5. The 5-minute interval 
+
+maxsteps <- which.max(averagesteps$meansteps)
+timetosteps <-  gsub("([0-9]{1,2})([0-9]{2})", "\\1:\\2", averagesteps[maxsteps,'interval'])
+
+```{r, echo=FALSE}
+maxsteps <- which.max(averagesteps$meansteps)
+timetosteps <-  gsub("([0-9]{1,2})([0-9]{2})", "\\1:\\2", averagesteps[maxsteps,'interval'])
+```
+
+## 6. imputing missing data 
+
+impactivity <- activity
+impactivity$steps[is.na(impactivity$steps)] <- mean(activity$steps, na.rm=TRUE)
+
+```{r, echo=FALSE}
+impactivity <- activity
+impactivity$steps[is.na(impactivity$steps)] <- mean(activity$steps, na.rm=TRUE)
+```
+
+## 7. Imputed Histogram 
+
+impstepsperday <- tapply(impactivity$steps, impactivity$date, sum, na.rm=TRUE)
+qplot(impstepsperday, xlab='Total steps per day', ylab='Frequency',main="Total Number of Steps Taken Each Day (Imputed)")
+
+```{r, echo=FALSE}
+impstepsperday <- tapply(impactivity$steps, impactivity$date, sum, na.rm=TRUE)
+qplot(impstepsperday, xlab='Total steps per day', ylab='Frequency',main="Total Number of Steps Taken Each Day (Imputed)",binwidth=100)
+```
+
+## 8. Panel plot for weekdays and weekends
+
+impactivity$dateType <-  ifelse(as.POSIXlt(impactivity$date)$wday %in% c(0,6), 'weekend', 'weekday')
+
+averagedActivityDataImputed <- aggregate(steps ~ interval + dateType, data=impactivity, mean)
+
+ggplot(averagedActivityDataImputed, aes(interval, steps)) + 
+    geom_line() + 
+    facet_grid(dateType ~ .) +
+    xlab("5-minute interval") + 
+    ylab("avarage number of steps")
+    
+```{r, echo=FALSE}
+impactivity$dateType <-  ifelse(as.POSIXlt(impactivity$date)$wday %in% c(0,6), 'weekend', 'weekday')
+
+averagedActivityDataImputed <- aggregate(steps ~ interval + dateType, data=impactivity, mean)
+
+ggplot(averagedActivityDataImputed, aes(interval, steps)) + 
+    geom_line() + 
+    facet_grid(dateType ~ .) +
+    xlab("5-minute interval") + 
+    ylab("avarage number of steps")
+
+```
